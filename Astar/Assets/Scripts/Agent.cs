@@ -103,7 +103,6 @@ public class Agent : MonoBehaviour
                 Gizmos.color = renderer.material.color;
                 Gizmos.DrawLine(Vector2IntToVector3(path[i], 0.5f), Vector2IntToVector3(path[i + 1], 0.5f));
             }
-
         }
     }
 }

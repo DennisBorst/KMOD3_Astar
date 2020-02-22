@@ -16,7 +16,105 @@ public class Astar
     /// <returns></returns>
     public List<Vector2Int> FindPathToTarget(Vector2Int startPos, Vector2Int endPos, Cell[,] grid)
     {
-        return null;
+        Debug.Log("Searching path");
+        Node startNode = new Node(startPos, null, 0, 0);
+
+        List<Node> openList = new List<Node>();
+        HashSet<Node> closedList = new HashSet<Node>();
+        openList.Add(startNode);
+
+        Node currentNode = startNode;
+
+        while (openList.Count > 0)
+        {
+            currentNode = openList[0];
+
+            for (int i = 1; i < openList.Count; i++)
+            {
+                if (openList[i].FScore < currentNode.FScore)
+                { 
+                    currentNode = openList[i]; 
+                }
+            }
+
+            openList.Remove(currentNode);
+            closedList.Add(currentNode);
+
+            if (currentNode.position == endPos)
+            {
+                break;
+            }
+
+            foreach (Cell neighbour in GetNeighbours(grid[currentNode.position.x, currentNode.position.y], grid))
+            {
+                if (closedList.Any(n => n.position == neighbour.gridPosition)) 
+                { 
+                    continue; 
+                }
+
+                Node newNode = new Node(neighbour.gridPosition, currentNode, (int)currentNode.GScore + 1, GetDistance(neighbour.gridPosition, endPos));
+
+                if (openList.Any(n => n.position == neighbour.gridPosition && newNode.GScore > n.GScore)) 
+                { 
+                    continue; 
+                }
+
+                openList.Add(newNode);
+            }
+        }
+
+        return RetracePath(startNode, currentNode);
+    }
+
+    private int GetDistance(Vector2Int beginPoint, Vector2Int endPoint)
+    {
+        int distance = Mathf.Abs(beginPoint.x - endPoint.x) + Mathf.Abs(beginPoint.y - endPoint.y);
+        return distance;
+    }
+
+    private List<Vector2Int> RetracePath(Node startNode, Node node)
+    {
+        List<Vector2Int> pathValue = new List<Vector2Int>();
+        Node currentNode = node;
+
+        while (currentNode != startNode)
+        {
+            pathValue.Add(currentNode.position);
+            currentNode = currentNode.parent;
+        }
+
+        pathValue.Reverse();
+        return pathValue;
+    }
+
+    private List<Cell> GetNeighbours(Cell cell, Cell[,] grid)
+    {
+        List<Cell> neighbours = new List<Cell>();
+        int _xStart, _xEnd, _yStart, _yEnd;
+        _xStart = _xEnd = _yStart = _yEnd = 0;
+
+        if (!cell.HasWall(Wall.LEFT)) { _xStart = -1; }
+        if (!cell.HasWall(Wall.RIGHT)) { _xEnd = 1; }
+        if (!cell.HasWall(Wall.DOWN)) { _yStart = -1; }
+        if (!cell.HasWall(Wall.UP)) { _yEnd = 1; }
+
+        for (int x = _xStart; x <= _xEnd; x++)
+        {
+            for (int y = _yStart; y <= _yEnd; y++)
+            {
+                int cellX = cell.gridPosition.x + x;
+                int cellY = cell.gridPosition.y + y;
+
+                if (cellX < 0 || cellX >= grid.GetLength(0) || cellY < 0 || cellY >= grid.GetLength(1) || Mathf.Abs(x) == Mathf.Abs(y))
+                {
+                    continue;
+                }
+
+                neighbours.Add(grid[cellX, cellY]);
+            }
+        }
+
+        return neighbours;
     }
 
     /// <summary>
